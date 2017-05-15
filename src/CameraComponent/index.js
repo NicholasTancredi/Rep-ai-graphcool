@@ -6,7 +6,7 @@ import {
 } from 'react-native'
 
 import composed from './graphql'
-import Camera from 'react-native-camera'
+// import Camera from 'react-native-camera'
 
 import styles from './styles'
 import VideoPlayer from '../VideoPlayer'
@@ -67,19 +67,19 @@ class CameraComponent extends Component {
         const {
             handleVideo,
             handlePhoto,
-            captureQuality
+            // captureQuality
         } = this.props
 
-        const {
-            constants: {
-                Type,
-                CaptureQuality
-            }
-        } = Camera
+        // const {
+        //     constants: {
+        //         Type,
+        //         CaptureQuality
+        //     }
+        // } = Camera
 
         return (
             <View style={{flex: 1}}>
-                <Camera
+                {/* <Camera
                     style={styles.cameraAbsolute}
                     type={Type[this.state.type]}
                     captureQuality={CaptureQuality[captureQuality || 'medium']}
@@ -87,7 +87,7 @@ class CameraComponent extends Component {
                     ref={r => {
                         this.camera = r
                     }}
-                />
+                /> */}
 
                 <View style={styles.camera}>
                     {handleVideo && handlePhoto && (

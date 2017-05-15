@@ -2,9 +2,9 @@ import { Alert } from 'react-native'
 const alerts = {}
 
 alerts
-.noUsername = onPress => Alert.alert(
-    'Blank Username',
-    `Sorry, your username can't be blank.`,
+.noEmail = onPress => Alert.alert(
+    'Blank Email',
+    `Sorry, your email can't be blank.`,
     [{text: 'OK', onPress}],
     {cancelable: false}
 )
@@ -26,17 +26,17 @@ alerts
 )
 
 alerts
-.usernameNotUnique = onPress => Alert.alert(
-    'Invalid Username',
-    `Sorry, this username is invalid.`,
+.emailNotUnique = onPress => Alert.alert(
+    'Invalid Email',
+    `Sorry, this email is invalid.`,
     [{text: 'OK', onPress}],
     {cancelable: false}
 )
 
 alerts
-.invalidUsername = onPress => Alert.alert(
-    'Unknown Username',
-    `Sorry, we couldn't find a user with that username`,
+.invalidEmail = onPress => Alert.alert(
+    'Unknown Email',
+    `Sorry, we couldn't find a user with that email`,
     [{text: 'OK', onPress}],
     {cancelable: false}
 )

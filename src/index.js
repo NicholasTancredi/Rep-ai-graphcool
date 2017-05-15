@@ -18,13 +18,9 @@ import {
     addGraphQLSubscriptions
 } from 'subscriptions-transport-ws'
 
-
-AsyncStorage.setItem(
-    'token',
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE0OTQ1MTMxMDcsImNsaWVudElkIjoiY2oweWJvMGJyMG5zMzAxMTVybXl0bXdmdyIsInByb2plY3RJZCI6ImNqMHlibzBicjBuczIwMTE1eXRkanN5cWMiLCJwZXJtYW5lbnRBdXRoVG9rZW5JZCI6ImNqMmtpaWxzejZ0N3EwMTQxY2txbDV6eGcifQ.wcaLPu22EzX6bAJlsg6oRnkd8MAX6UB-mZjWCt4Orrk'
-)
-
 // import Auth0LockNativeAccountScreen from './Auth0LockNativeAccountScreen'
+
+
 
 import ActivityIndicatorComponent from './ActivityIndicatorComponent'
 import AccountsCreateUserComponent from './AccountsCreateUserComponent'
@@ -54,6 +50,13 @@ export default class server extends Component {
         .catch(console.error)
     }
 
+    setUser = (user) => {
+        this.user = user
+
+        AsyncStorage.setItem('user', JSON.stringify(user))
+        .catch(console.error)
+    }
+
     setToken = (token) => (
         AsyncStorage.setItem('token', token)
         .then(() => this.setState({ token }))
@@ -66,6 +69,11 @@ export default class server extends Component {
         .catch(console.error)
     )
 
+    handleSigninUser = ({user, token}) => {
+        this.setUser(user)
+        this.setToken(token)
+    }
+
     getApolloClient = () => {
         const serverUrl = 'api.graph.cool/simple/v1/Rep'
         const uri = `https://${serverUrl}`
@@ -74,15 +82,16 @@ export default class server extends Component {
         networkInterface.use([{
             applyMiddleware(req, next) {
                 req.options.headers = req.options.headers || {}
-                // AsyncStorage.getItem('token')
-                // .then(token => {
-                //     if (token) {
-                req.options.headers.authorization = (
-                    'Bearer '
-                    + 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE0OTQ1MTMxMDcsImNsaWVudElkIjoiY2oweWJvMGJyMG5zMzAxMTVybXl0bXdmdyIsInByb2plY3RJZCI6ImNqMHlibzBicjBuczIwMTE1eXRkanN5cWMiLCJwZXJtYW5lbnRBdXRoVG9rZW5JZCI6ImNqMmtpaWxzejZ0N3EwMTQxY2txbDV6eGcifQ.wcaLPu22EzX6bAJlsg6oRnkd8MAX6UB-mZjWCt4Orrk')
-                    // }
-                next()
-                // })
+                AsyncStorage.getItem('token')
+                .then(token => {
+                    if (token) {
+                        req.options.headers.authorization = (
+                            'Bearer ' + token
+                        )
+                    }
+
+                    next()
+                })
             }
         }])
 
@@ -107,16 +116,28 @@ export default class server extends Component {
     render() {
         const {
             loading,
+            token
         } = this.state
 
         if (loading) {
             return <ActivityIndicatorComponent />
         }
 
+        if (!token) {
+            return (
+                <ApolloProvider client={this.getApolloClient()}>
+                    <AccountsCreateUserComponent
+                        handleSigninUser={this.handleSigninUser}
+                    />
+                </ApolloProvider>
+            )
+        }
+
         return (
             <ApolloProvider client={this.getApolloClient()}>
                 <RootNavigationComponent
                     userId={this.userId}
+                    user={this.user}
                     active={this.tabBarStateActiveItem}
                     removeToken={this.removeToken}
                 />

@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+
 import {
     TextInput,
     ActivityIndicator,
@@ -20,8 +21,8 @@ class AccountsCreateUserComponent extends Component {
     }
 
     text = {
-        username: '',
-        password: ''
+        email: 'nicholastancredi@gmail.com',
+        password: 'Betbetbet2'
     }
 
     handleRef = key => ref => {
@@ -33,9 +34,9 @@ class AccountsCreateUserComponent extends Component {
     }
 
     handleCreateUser = () => {
-        if (!this.text.username) {
-            return alerts.noUsername(() => {
-                this.username.focus()
+        if (!this.text.email) {
+            return alerts.noEmail(() => {
+                this.email.focus()
             })
         }
 
@@ -48,8 +49,8 @@ class AccountsCreateUserComponent extends Component {
         this.setState({editable: false},
             () => (
                 this.props.createUser(this.text)
-                .then(({data: {createUser: {token}}}) => {
-                    this.props.setToken(token)
+                .then(({data: {createUser: {id}}}) => {
+                    this.handleLogin()
                 })
                 .catch(err => {
                     this.handleCreateUserErrors(err)
@@ -59,12 +60,12 @@ class AccountsCreateUserComponent extends Component {
     }
 
     handleCreateUserErrors = ({message}) => {
-        const usernameNotUnique = message
-            .search("Field 'username' must be unique") !== -1
+        const emailNotUnique = message
+            .search("Field 'email' must be unique") !== -1
 
-        if (usernameNotUnique) {
-            return alerts.usernameNotUnique(() => this
-                .setState({editable: true}, () => this.username.focus())
+        if (emailNotUnique) {
+            return alerts.emailNotUnique(() => this
+                .setState({editable: true}, () => this.email.focus())
             )
         } else {
             console.error(message)
@@ -72,9 +73,9 @@ class AccountsCreateUserComponent extends Component {
     }
 
     handleLogin = () => {
-        if (!this.text.username) {
-            return alerts.noUsername(() => {
-                this.username.focus()
+        if (!this.text.email) {
+            return alerts.noEmail(() => {
+                this.email.focus()
             })
         }
 
@@ -84,11 +85,12 @@ class AccountsCreateUserComponent extends Component {
             })
         }
 
-        this.props.loginUser(this.text)
-        .then(({data: {loginUser: {token}}}) => {
-            this.props.setToken(token)
+        this.props.signinUser({email: this.text})
+        .then(({data: {signinUser}}) => {
+            this.props.handleSigninUser(signinUser)
         })
         .catch(err => {
+            console.warn('signinUserError', err)
             this.handleLoginUserErrors(err)
         })
     }
@@ -97,8 +99,8 @@ class AccountsCreateUserComponent extends Component {
         const invalidPassword = message
             .search("Invalid password.") !== -1
 
-        const invalidUsername = message
-            .search("Could not find a user with that username") !== -1
+        const invalidEmail = message
+            .search("Could not find a user with that email") !== -1
 
         if (invalidPassword) {
             return alerts.invalidPassword(() => this
@@ -106,9 +108,9 @@ class AccountsCreateUserComponent extends Component {
             )
         }
 
-        if (invalidUsername) {
-            return alerts.invalidUsername(() => this
-                .setState({editable: true}, () => this.username.focus())
+        if (invalidEmail) {
+            return alerts.invalidEmail(() => this
+                .setState({editable: true}, () => this.email.focus())
             )
         }
 
@@ -146,9 +148,9 @@ class AccountsCreateUserComponent extends Component {
                     style={styles.textInput}
                     selectTextOnFocus={true}
                     editable={this.state.editable}
-                    placeholder={'username'}
-                    ref={this.handleRef('username')}
-                    onChangeText={this.handleChangeText('username')}
+                    placeholder={'email'}
+                    ref={this.handleRef('email')}
+                    onChangeText={this.handleChangeText('email')}
                 />
                 <TextInput
                     style={styles.textInput}
@@ -161,7 +163,11 @@ class AccountsCreateUserComponent extends Component {
                 />
                 <Button
                     title={this.state.buttonTitle}
-                    onPress={() => this[this.state.buttonOnPress]()}
+                    onPress={() => {
+                        console.warn('loading in new user')
+                        this[this.state.buttonOnPress]()
+                    }}
+
                 />
                 <Button
                     title={this.state.buttonSwapTitle}
@@ -178,35 +184,65 @@ class AccountsCreateUserComponent extends Component {
     }
 }
 
-const LoginUserMutation =  gql `
-    mutation LoginUserMutation($data: LoginUserInput!) {
-        loginUser(input: $data) {
+
+const SigninUserMutation =  gql `
+    mutation SigninUser($email: AUTH_PROVIDER_EMAIL) {
+        signinUser(email: $email) {
             token
+            user {
+                id
+                username
+                avatar {
+                    uri
+                }
+            }
         }
     }
 `
 
 const CreateUserMutation =  gql `
-    mutation CreateUserMutation($data: CreateUserInput!) {
-        createUser(input: $data) {
-            token
+    mutation CreateUserMutation(
+        $authProvider: AuthProviderSignupData!
+    ) {
+        createUser(authProvider: $authProvider) {
+            id
         }
     }
 `
 
-export default compose(
-    graphql(CreateUserMutation, {
-        props: ({mutate}) => ({
-            createUser: data => mutate({
-                variables: {data},
-            }),
+export const CreateUserGraphql = graphql(CreateUserMutation, {
+    props: ({mutate}) => ({
+        createUser: ({
+            email,
+            password
+        }) => mutate({
+            variables: {
+                authProvider: {
+                    email: {
+                        email,
+                        password
+                    }
+                }
+            },
         }),
     }),
-    graphql(LoginUserMutation, {
-        props: ({mutate}) => ({
-            loginUser: data => mutate({
-                variables: {data},
-            }),
+})
+
+export const SigninUserGraphql = graphql(SigninUserMutation, {
+    props: ({mutate}) => ({
+        signinUser: ({
+            email,
+            password,
+        }) => mutate({
+            variables: {
+                email,
+                password,
+            },
         }),
-    })
+    }),
+})
+
+export default compose(
+    CreateUserGraphql,
+    SigninUserGraphql
 )(AccountsCreateUserComponent)
