@@ -90,7 +90,6 @@ class AccountsCreateUserComponent extends Component {
             this.props.handleSigninUser(signinUser)
         })
         .catch(err => {
-            console.warn('signinUserError', err)
             this.handleLoginUserErrors(err)
         })
     }
@@ -164,7 +163,6 @@ class AccountsCreateUserComponent extends Component {
                 <Button
                     title={this.state.buttonTitle}
                     onPress={() => {
-                        console.warn('loading in new user')
                         this[this.state.buttonOnPress]()
                     }}
 
